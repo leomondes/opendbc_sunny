@@ -1,4 +1,5 @@
 import copy
+import math
 import numpy as np
 from opendbc.car import CanBusBase
 from opendbc.car.common.conversions import Conversions as CV
@@ -37,7 +38,31 @@ class CanBus(CanBusBase):
     return self._cam
 
 
-def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_torque, lkas_icon):
+def steering_damp_hybrid(kph: float, enabled: bool = True) -> int:
+    if not enabled:
+        return 100
+    try:
+        x = float(kph)
+    except (TypeError, ValueError):
+        x = 0.0
+    if not math.isfinite(x) or x < 0:
+        x = 0.0
+
+    vs = 59.7
+    if x <= vs:
+        d = (-0.0247624341906124)*x*x + 3.2358363533006216*x - 65.93228690831037
+    else:
+        d = 1.0040099253482404*x - 20.947793233973066
+
+    # Natural cap point where line hits 100
+    if x >= 120.46473862499157:
+        d = 100.0
+
+    return int(math.floor(max(10.0, min(100.0, d))))
+
+
+def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_torque, lkas_icon, vEgoRaw):
+
   common_values = {
     "LKA_MODE": 2,
     "LKA_ICON": lkas_icon,
@@ -47,8 +72,10 @@ def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_torque,
     "STEER_MODE": 0,
     "HAS_LANE_SAFETY": 0,  # hide LKAS settings
     "NEW_SIGNAL_2": 0,
-    "DAMP_FACTOR": 100,  # can potentially tuned for better perf [3, 200]
+    "DAMP_FACTOR": 100,
   }
+
+  print(f"{vEgoRaw} - {steering_damp_hybrid(vEgoRaw, True)}")
 
   lkas_values = copy.copy(common_values)
   lkas_values["LKA_AVAILABLE"] = 0
