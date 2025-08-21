@@ -75,6 +75,7 @@ def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_torque,
     "DAMP_FACTOR": 100,
   }
 
+  vEgoRaw = vEgoRaw * 2.237
   print(f"{vEgoRaw} - {steering_damp_hybrid(vEgoRaw, True)}")
 
   lkas_values = copy.copy(common_values)
