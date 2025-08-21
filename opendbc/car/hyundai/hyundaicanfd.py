@@ -72,11 +72,11 @@ def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_torque,
     "STEER_MODE": 0,
     "HAS_LANE_SAFETY": 0,  # hide LKAS settings
     "NEW_SIGNAL_2": 0,
-    "DAMP_FACTOR": 100,
+    "DAMP_FACTOR": steering_damp_hybrid(vEgoRaw, lat_active),
   }
 
   vEgoRaw = vEgoRaw * 2.237
-  print(f"{vEgoRaw} - {steering_damp_hybrid(vEgoRaw, True)}")
+  print(f"{vEgoRaw} - {steering_damp_hybrid(vEgoRaw, lat_active)}")
 
   lkas_values = copy.copy(common_values)
   lkas_values["LKA_AVAILABLE"] = 0
