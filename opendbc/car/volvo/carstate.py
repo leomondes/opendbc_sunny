@@ -1,3 +1,4 @@
+import copy
 from cereal import car
 from opendbc.can import CANParser
 from opendbc.car.common.conversions import Conversions as CV
@@ -13,12 +14,9 @@ class CarState(CarStateBase):
     self.eps_torque_timer = 0
     self.frame = 0
 
-  #def update(self, cp, cp_cam):
   def update(self, can_parsers) -> structs.CarState:
     pt_cp = can_parsers[Bus.pt]
     cam_cp = can_parsers[Bus.cam]
-    #cp_body = can_parsers[Bus.body]
-
     ret = car.CarState.new_message()
     ret = structs.CarState()
     ret_sp = structs.CarStateSP()
@@ -69,6 +67,8 @@ class CarState(CarStateBase):
 
       # Set fault if above threshold
       ret.steerFaultTemporary = self.eps_torque_timer >= CarControllerParams.STEER_TIMEOUT
+    else:
+      ret.steerFaultTemporary = False
 
     self.cruiseState_enabled_prev = ret.cruiseState.enabled
 
@@ -90,6 +90,11 @@ class CarState(CarStateBase):
     # Store info from servo message PSCM1
     # FSM (camera) checks if LKAActive & LKATorque active when not requested
     self.pscm_stock_values = pt_cp.vl["PSCM1"]
+
+    # Messages forwarded for oplong and radar spoofing
+    self.stock_FSM1 = copy.copy(cam_cp.vl["FSM1"])
+    self.stock_FSM3 = copy.copy(cam_cp.vl["FSM3"])
+    self.ACC_Check = cam_cp.vl["FSM3"]["ACC_Check"]
 
     self.frame += 1
     return ret, ret_sp
