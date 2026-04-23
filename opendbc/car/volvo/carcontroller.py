@@ -94,7 +94,7 @@ class CarController(CarControllerBase):
     # and takes the last-arriving (which is OP's at ~50Hz).
     #
     # Run at 50Hz (every other frame) to match stock cadence.
-    if self.CP.openpilotLongitudinalControl and CC.longActive and self.frame % 2 == 0:
+    if self.CP.openpilotLongitudinalControl and CC.longActive:
       accel = float(np.clip(actuators.accel, CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX))
       can_sends.append(volvocan.create_longitudinal(self.packer_pt, CS.stock_FSM3, accel, CS.ACC_Check))
       can_sends.append(volvocan.create_radar(self.packer_pt, CS.stock_FSM1, True))
